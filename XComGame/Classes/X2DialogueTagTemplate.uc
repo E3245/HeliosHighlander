@@ -51,7 +51,8 @@ static function bool CheckEventSourceSoldierClassName(X2DialogueTagTemplate Temp
 
 static function bool CheckMissionName(X2DialogueTagTemplate Template, const out RuleTemplateData Rule, Object EventData, Object EventSource, XComGameState GameState, out String ExpectedValue, out String ActualValue)
 {
-	local XComStrategyPresentationLayer StrategyPres;
+	//Commented out variable for HELIOS Issue #1
+	//local XComStrategyPresentationLayer StrategyPres;
 	local UIScreen CurrentScreen;
 	local XComGameState_StrategyAction_Mission Action;
 	local XComGameState_MissionSite Mission;
@@ -60,12 +61,20 @@ static function bool CheckMissionName(X2DialogueTagTemplate Template, const out 
 	local UIDIOSquadSelect SquadSelectScreen;
 
 	History = `XCOMHISTORY;
-	StrategyPres = `STRATPRES;
-	if (StrategyPres != none)
+	// Start HELIOS Issue #1
+	// Fix a bug with custom presentation layers not being able to pass this check, 
+	// therefore invalidating any dialogues that use this condition.
+
+	// Test for strategy ruleset instead of presentation layer
+	//StrategyPres = `STRATPRES;
+	if (`STRATEGYRULES != none)
 	{
-		CurrentScreen = StrategyPres.ScreenStack.GetCurrentScreen();
+		CurrentScreen = `SCREENSTACK.GetCurrentScreen();
+		// End HELIOS Issue #1
+
 		ActualValue = string(CurrentScreen.Class.Name);
 		// HELIOS BEGIN
+		// Refer to the presentation base's stored SquadSelect screen name instead of a hard reference
 		if (CurrentScreen.Class.Name == `PRESBASE.SquadSelect.Name)
 		// HELIOS END
 		{
@@ -105,19 +114,26 @@ static function bool CheckMissionCategory(X2DialogueTagTemplate Template, const 
 	local UIDIOWorkerReviewScreen WorkerReviewScreen;
 	local XComGameState_DioWorker MissionWorker;
 	local X2DioStrategyScheduleSourceTemplate StrategySourceTemplate;
-	local XComStrategyPresentationLayer StrategyPres;
+	//Commented out variable for HELIOS Issue #1
+//	local XComStrategyPresentationLayer StrategyPres;
 	local UIScreen CurrentScreen;
 	local bool bResult;
 
-	StrategyPres = `STRATPRES;
 	History = `XCOMHISTORY;
+	//Commented out call to original Stratpres for HELIOS Issue #1
+	//StrategyPres = `STRATPRES;
 
-	CurrentScreen = StrategyPres.ScreenStack.GetCurrentScreen();
+	// Start HELIOS Issue #1
+	CurrentScreen = `SCREENSTACK.GetCurrentScreen();
+	// End HELIOS Issue #1
 
-	ExpectedValue = "UIDIOWorkerReviewScreen";
+	ExpectedValue = "UIDIOWorkerReviewScreen or child";
 	ActualValue = string(CurrentScreen.Class.Name);
 
-	if (CurrentScreen.Class.Name == class'UIDIOWorkerReviewScreen'.Name)
+	// Start HELIOS Issue #1
+	// Perform a cast to test if it's a child of UIDIOWorkerReviewScreen
+	if (UIDIOWorkerReviewScreen(CurrentScreen) != none)
+	// End HELIOS Issue #1
 	{
 		WorkerReviewScreen = UIDIOWorkerReviewScreen(CurrentScreen);
 		if (WorkerReviewScreen.m_WorkerRef.ObjectID > 0)
@@ -236,14 +252,18 @@ static function bool CheckIsOnTacticalMission(X2DialogueTagTemplate Template, co
 	return (XComPresentationLayer(`PRESBASE) != none);
 }
 
+// Start HELIOS Issue #1
+// Check for StrategyRules instead of the Presentation Layer. Generally mods with custom gamemodes will typically subclass the strategy ruleset.
+// For mods that add new gamemodes but do not subclass the strategy ruleset, use OPTC to patch this delegate.
 static function bool CheckIsInStrategyGame(X2DialogueTagTemplate Template, const out RuleTemplateData Rule, Object EventData, Object EventSource, XComGameState GameState, out String ExpectedValue, out String ActualValue)
 {
 	ExpectedValue = "valid strategy presentation layer";
-	ActualValue = string(`STRATPRES);
+	ActualValue = string(`STRATEGYRULES);
 
 	// todo: use a better check
-	return (`STRATPRES != none);
+	return (`STRATEGYRULES != none);
 }
+// End HELIOS Issue #1
 
 static function bool CheckIsOnInvestigation(X2DialogueTagTemplate Template, const out RuleTemplateData Rule, Object EventData, Object EventSource, XComGameState GameState, out String ExpectedValue, out String ActualValue)
 {
