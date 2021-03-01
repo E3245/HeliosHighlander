@@ -9,7 +9,10 @@
 
 //
 // HELIOS CHANGE: Allow mods to change everything about the notifications by using XComLWTuple and HSStrategyNotificationObject
+// Event listeners that want to edit this must use `ELD_Immediate` when adding the events (WOTC CHL Issue #4)
+// HSStrategyNotificationObject stores information about the notification being used (Color, Text, Delegate, etc) and is sent via triggering an event, including the XComGameState object.
 //
+
 class DioStrategyNotificationsHelper extends Object
 	config(GameData);
 
@@ -101,7 +104,7 @@ static function RefreshCriticalMissionNotification(XComGameState ModifyGameState
 	Tuple.Data[0].kind = XComLWTVObject;
 	Tuple.Data[0].o = NotifObj;
 
-	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateCriticalMissionNotif', Tuple, Tuple);
+	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateCriticalMissionNotif', Tuple, Tuple, ModifyGameState);
 
 	// Retrieve edited data from tuple
 	NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -157,7 +160,7 @@ static function RefreshUnassignedAgentsNotifications(XComGameState ModifyGameSta
 	Tuple.Data[0].kind = XComLWTVObject;
 	Tuple.Data[0].o = NotifObj;
 
-	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateUnassignedAgentsNotif', Tuple, Tuple);
+	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateUnassignedAgentsNotif', Tuple, Tuple, ModifyGameState);
 
 	// Retrieve edited data from tuple
 	NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -204,7 +207,7 @@ static function RefreshUnlockAgentNotifications(XComGameState ModifyGameState)
 	Tuple.Data[0].kind = XComLWTVObject;
 	Tuple.Data[0].o = NotifObj;
 
-	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateUnlockAgentNotif', Tuple, Tuple);
+	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateUnlockAgentNotif', Tuple, Tuple, ModifyGameState);
 
 	// Retrieve edited data from tuple
 	NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -273,7 +276,7 @@ static function RefreshPromotionNotifications(XComGameState ModifyGameState)
 	Tuple.Data[0].kind = XComLWTVObject;
 	Tuple.Data[0].o = NotifObj;
 
-	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePromotionNotif', Tuple, Tuple);
+	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePromotionNotif', Tuple, Tuple, ModifyGameState);
 
 	// Retrieve edited data from tuple
 	NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -365,7 +368,7 @@ static function RefreshScarNotifications(XComGameState ModifyGameState)
 		Tuple.Data[0].kind = XComLWTVObject;
 		Tuple.Data[0].o = NotifObj;
 
-		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateNormalScarNotif', Tuple, Tuple);
+		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateNormalScarNotif', Tuple, Tuple, ModifyGameState);
 
 		// Retrieve edited data from tuple
 		NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -390,18 +393,17 @@ static function RefreshScarNotifications(XComGameState ModifyGameState)
 	if (LeftBehindScarUnitRefs.Length > 0)
 	{
 		// HELIOS BEGIN
-		NotifObj = new class'HSStrategyNotificationObject';
 		NotifObj.NotificationData.Title 			= default.LeftBehindScarsEarnedTitle;
 		NotifObj.NotificationData.Body 				= default.LeftBehindScarsEarnedBody;
 		NotifObj.NotificationData.UnitRefs 			= LeftBehindScarUnitRefs;
 
 		Tuple = new class'XComLWTuple';
-		Tuple.Id = 'LeftBehindScarNotificationObject';
+		Tuple.Id 				= 'LeftBehindScarNotificationObject';
 		Tuple.Data.Add(1);
-		Tuple.Data[0].kind = XComLWTVObject;
-		Tuple.Data[0].o = NotifObj;
+		Tuple.Data[0].kind 		= XComLWTVObject;
+		Tuple.Data[0].o 		= NotifObj;
 
-		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateLeftBehindScarNotif', Tuple, Tuple);
+		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateLeftBehindScarNotif', Tuple, Tuple, ModifyGameState);
 
 		// Retrieve edited data from tuple
 		NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -463,7 +465,7 @@ static function RefreshAssemblyNotifications(XComGameState ModifyGameState)
 		Tuple.Data[0].kind = XComLWTVObject;
 		Tuple.Data[0].o = NotifObj;
 
-		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateAssemblyCompleteNotif', Tuple, Tuple);
+		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateAssemblyCompleteNotif', Tuple, Tuple, ModifyGameState);
 
 		// Retrieve edited data from tuple
 		NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -500,7 +502,7 @@ static function RefreshAssemblyNotifications(XComGameState ModifyGameState)
 			Tuple.Data[0].kind = XComLWTVObject;
 			Tuple.Data[0].o = NotifObj;
 
-			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateAssemblyIdleNotif', Tuple, Tuple);
+			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateAssemblyIdleNotif', Tuple, Tuple, ModifyGameState);
 
 			// Retrieve edited data from tuple
 			NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -566,7 +568,7 @@ static function RefreshTrainingNotifications(XComGameState ModifyGameState)
 			Tuple.Data[0].kind = XComLWTVObject;
 			Tuple.Data[0].o = NotifObj;
 
-			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateTrainingCompleteNotif', Tuple, Tuple);
+			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateTrainingCompleteNotif', Tuple, Tuple, ModifyGameState);
 
 			// Retrieve edited data from tuple
 			NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -654,7 +656,7 @@ static function RefreshSpecOpsCompleteNotification(XComGameState ModifyGameState
 			Tuple.Data[0].kind = XComLWTVObject;
 			Tuple.Data[0].o = NotifObj;
 
-			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateSpecOpsCompleteNotif', Tuple, Tuple);
+			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateSpecOpsCompleteNotif', Tuple, Tuple, ModifyGameState);
 
 			// Retrieve edited data from tuple
 			NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -725,7 +727,7 @@ static function RefreshSupplyNotifications(XComGameState ModifyGameState)
 	Tuple.Data[0].kind = XComLWTVObject;
 	Tuple.Data[0].o = NotifObj;
 
-	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateNewSupplyNotif', Tuple, Tuple);
+	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateNewSupplyNotif', Tuple, Tuple, ModifyGameState);
 
 	// Retrieve edited data from tuple
 	NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -790,7 +792,7 @@ static function RefreshScavengerMarketNotifications(XComGameState ModifyGameStat
 		Tuple.Data[0].kind = XComLWTVObject;
 		Tuple.Data[0].o = NotifObj;
 
-		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateScavengerMarketAvaliableNotif', Tuple, Tuple);
+		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateScavengerMarketAvaliableNotif', Tuple, Tuple, ModifyGameState);
 
 		// Retrieve edited data from tuple
 		NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -846,7 +848,7 @@ static function RefreshPassiveIncomeNotifications(XComGameState ModifyGameState)
 			Tuple.Data[0].kind = XComLWTVObject;
 			Tuple.Data[0].o = NotifObj;
 
-			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePassiveIncomeNotif', Tuple, Tuple);
+			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePassiveIncomeNotif', Tuple, Tuple, ModifyGameState);
 
 			// Retrieve edited data from tuple
 			NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -921,7 +923,7 @@ static function RefreshUnrestAnarchyChangedNotifications(XComGameState ModifyGam
 		Tuple.Data[0].kind = XComLWTVObject;
 		Tuple.Data[0].o = NotifObj;
 
-		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateUnrestAnarchyChangedNotif', Tuple, Tuple);
+		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateUnrestAnarchyChangedNotif', Tuple, Tuple, ModifyGameState);
 
 		// Retrieve edited data from tuple
 		NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -974,7 +976,7 @@ static function RefreshPaceCheckNotifications(XComGameState ModifyGameState)
 			Tuple.Data[0].kind = XComLWTVObject;
 			Tuple.Data[0].o = NotifObj;
 
-			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePaceWarning_SpecOps_Notif', Tuple, Tuple);
+			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePaceWarning_SpecOps_Notif', Tuple, Tuple, ModifyGameState);
 
 			// Retrieve edited data from tuple
 			NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -1006,7 +1008,7 @@ static function RefreshPaceCheckNotifications(XComGameState ModifyGameState)
 			Tuple.Data[0].kind = XComLWTVObject;
 			Tuple.Data[0].o = NotifObj;
 
-			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePaceWarning_SpecOps_Notif', Tuple, Tuple);
+			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePaceWarning_SpecOps_Notif', Tuple, Tuple, ModifyGameState);
 
 			// Retrieve edited data from tuple
 			NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -1043,7 +1045,7 @@ static function RefreshPaceCheckNotifications(XComGameState ModifyGameState)
 			Tuple.Data[0].kind = XComLWTVObject;
 			Tuple.Data[0].o = NotifObj;
 
-			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePaceWarning_FieldTeamBuild_Notif', Tuple, Tuple);
+			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePaceWarning_FieldTeamBuild_Notif', Tuple, Tuple, ModifyGameState);
 
 			// Retrieve edited data from tuple
 			NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
@@ -1075,7 +1077,7 @@ static function RefreshPaceCheckNotifications(XComGameState ModifyGameState)
 			Tuple.Data[0].kind = XComLWTVObject;
 			Tuple.Data[0].o = NotifObj;
 
-			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePaceWarning_FieldTeamAbility_Notif', Tuple, Tuple);
+			`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreatePaceWarning_FieldTeamAbility_Notif', Tuple, Tuple, ModifyGameState);
 
 			// Retrieve edited data from tuple
 			NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);

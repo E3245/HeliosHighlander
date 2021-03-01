@@ -1851,7 +1851,7 @@ function RefreshAllSpecOpsUnlocks(XComGameState ModifyGameState, optional bool b
 		Tuple.Data[0].kind = XComLWTVObject;
 		Tuple.Data[0].o = NotifObj;
 
-		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateNewSpecOpsNotif', Tuple, Tuple);
+		`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Notification_CreateNewSpecOpsNotif', Tuple, Tuple, ModifyGameState);
 		
 		// Retrieve edited data from tuple
 		NotifObj = HSStrategyNotificationObject(Tuple.Data[0].o);
