@@ -9,7 +9,10 @@
 
 //
 // HELIOS CHANGE: Allow mods to change everything about the notifications by using XComLWTuple and HSStrategyNotificationObject
+// Event listeners that want to edit this must use `ELD_Immediate` when adding the events (WOTC CHL Issue #4)
+// HSStrategyNotificationObject stores information about the notification being used (Color, Text, Delegate, etc) and is sent via triggering an event, including the XComGameState object.
 //
+
 class DioStrategyNotificationsHelper extends Object
 	config(GameData);
 
