@@ -262,7 +262,7 @@ simulated function DoTurnUpkeep(XComGameState ModifyGameState)
 
 	// Scavenger Market updates
 
-	// Begin HELIOS Issue #20
+	// Begin HELIOS Issue #21
 	// Allow mods to handle the alt market data themselves
 	// Event Listener must be set to ELD_Immediate as we don't want to submit a gamestate in the middle of a Context before processing the rest of the Context
 	// Send a boolean so we can determine if we go forward with Alt Market Processing
@@ -292,7 +292,7 @@ simulated function DoTurnUpkeep(XComGameState ModifyGameState)
 			class'DioStrategyAI'.static.CreateAndStartScavengerMarket(ModifyGameState);
 		}
 	}
-	// End HELIOS Issue #20
+	// End HELIOS Issue #21
 
 	// Campaign Goal upkeep
 	CampaignGoal = DioHQ.GetCampaignGoal(ModifyGameState);
