@@ -237,6 +237,9 @@ simulated function DoTurnUpkeep(XComGameState ModifyGameState)
 	local XComGameState_AnarchyUnrestResult AnarcyUnrestResult;
 	local int i, CityUnrestChange;
 
+	// HELIOS #20 Variables
+	local XComLWTuple Tuple;
+
 	DioHQ = XComGameState_HeadquartersDio(ModifyGameState.ModifyStateObject(class'XComGameState_HeadquartersDio', ObjectID));
 	
 	DioHQ.ClearAPCDistrict(ModifyGameState);
@@ -258,19 +261,38 @@ simulated function DoTurnUpkeep(XComGameState ModifyGameState)
 	RefreshAllSpecOpsUnlocks(ModifyGameState);
 
 	// Scavenger Market updates
-	// If the scavenger market is active, check duration and remove
-	if (IsScavengerMarketAvailable())
+
+	// Begin HELIOS Issue #21
+	// Allow mods to handle the alt market data themselves
+	// Event Listener must be set to ELD_Immediate as we don't want to submit a gamestate in the middle of a Context before processing the rest of the Context
+	// Send a boolean so we can determine if we go forward with Alt Market Processing
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'ManipulateAltMarketLogic';
+	Tuple.Data.Add(1);
+	Tuple.Data[0].kind 	= XComLWTVBool;
+	Tuple.Data[0].b 	= false;
+	
+	// Send the Tuple and the Gamestate through this event
+	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_DioHQ_TurnUpkeep_ManipulateAltMarket', Tuple, DioHQ, ModifyGameState);
+
+	// Process if the Tuple returns false (No logic was processed)
+	if (Tuple.Data[0].b == false)
 	{
-		if (DioHQ.CurrentTurn >= DioHQ.LastScavengerMarketTurn + class'DioStrategyAI'.default.ScavengerMarketDuration)
+		// If the scavenger market is active, check duration and remove
+		if (IsScavengerMarketAvailable())
 		{
-			DioHQ.RemoveScavengerMarket(ModifyGameState);
+			if (DioHQ.CurrentTurn >= DioHQ.LastScavengerMarketTurn + class'DioStrategyAI'.default.ScavengerMarketDuration)
+			{
+				DioHQ.RemoveScavengerMarket(ModifyGameState);
+			}
+		}
+		// If scavenger market not active but unlocked and the cooldown has elapsed, spawn it
+		else if (IsScavengerMarketUnlocked() && DioHQ.CurrentTurn >= DioHQ.NextScavengerMarketTurn)
+		{
+			class'DioStrategyAI'.static.CreateAndStartScavengerMarket(ModifyGameState);
 		}
 	}
-	// If scavenger market not active but unlocked and the cooldown has elapsed, spawn it
-	else if (IsScavengerMarketUnlocked() && DioHQ.CurrentTurn >= DioHQ.NextScavengerMarketTurn)
-	{
-		class'DioStrategyAI'.static.CreateAndStartScavengerMarket(ModifyGameState);
-	}
+	// End HELIOS Issue #21
 
 	// Campaign Goal upkeep
 	CampaignGoal = DioHQ.GetCampaignGoal(ModifyGameState);
