@@ -118,6 +118,7 @@ simulated function InitFlag(StateObjectReference ObjectRef)
 
 	// HELIOS Issue #15 variables
 	local name 					IterTag;
+	local HSHelpers				HSHelpersObj;
 
 	m_bIsFriendly = new class'CachedBool';
 	m_bIsActive = new class'CachedBool';
@@ -154,11 +155,14 @@ simulated function InitFlag(StateObjectReference ObjectRef)
 	
 	// Begin HELIOS Issue #15
 	// Check if there's at least one Tactical Tags that require disabling the HP bar
- 	if (class'HSHelpers' != none)
+	
+	// Use CDO to retrieve the object instead of directly referencing the object ( Can't call instance functions from within static functions )
+	HSHelpersObj = HSHelpers(class'XComEngine'.static.GetClassDefaultObject(class'HSHelpers'));
+ 	if (HSHelpersObj != none)
 	{
 		foreach DarkEvent_DisableHPUpdatesFromFlag(IterTag)
 		{
-			if ( class'HSHelpers'.static.CheckDarkEventTags(IterTag) )
+			if ( HSHelpersObj.CheckDarkEventTags(IterTag) )
 			{
 				bOnlyShowMaxHealth = true;
 				return;
