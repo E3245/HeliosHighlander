@@ -1584,7 +1584,7 @@ static function GameRulesCache_VisibilityInfo CalculateCoverMitigationForAbility
 	Tuple.Data[4].kind 	= XComLWTVInt;
 	Tuple.Data[4].i 	= AddedCoverMitigation;
 
-	`XEVENTMGR.TriggerEvent('HELIOS_TACTICAL_Timeline_ShouldRevealReinforcements', Tuple, Tuple);
+	`XEVENTMGR.TriggerEvent('HELIOS_TACTICAL_ModifyCoverMitigationCalculations', Tuple, Tuple);
 
 	bPerformCoverMitigation = Tuple.Data[0].b;
 	// End HELIOS Issue #27
