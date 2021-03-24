@@ -44,7 +44,7 @@ function RealizeVersionText(UIShell ShellScreen)
 		VersionDisplay.AnchorBottomCenter();
 		VersionDisplay.SetY(-ShellScreen.TickerHeight + 10);
 
-		VersionString = "Codename Helios loaded, Version: " $ class'X2DownloadableContentInfo_Helios_Overhaul'.default.Version;
+		VersionString = "Highlander loaded, Codename Helios, Version: " $ class'X2DownloadableContentInfo_Helios_Overhaul'.default.Version;
 		VersionDisplay.SetHTMLText(VersionString);
 	
 		`LOG("Version Text Created: " $ VersionString $", Object: " $ VersionDisplay,,'Helios_Overhaul');		
