@@ -99,7 +99,7 @@ var int VisualizedHistoryIndex;
 
 var config bool bDisplaySurprisedPreparedDuringBreach;
 
-// Start HELIOS Issue #31 (Superseeds #15)
+// Start HELIOS Issue #29 (Superseeds #15)
 // Unfortunately we cannot use the previous implementation due to C++/script size mismatch. 
 // We can still do the boolean trick by putting ourselves under a previously defined boolean, but that's about it.
 // Instead, send a LWTuple in an Event Listener when the Flash element is created for the first time.
@@ -191,7 +191,7 @@ simulated function OnInit()
 		UpdateFromState(StartingState, true);
 	}
 
-	// Start HELIOS Issue #31 (Superseeds #15)
+	// Start HELIOS Issue #29 (Superseeds #15)
 	// Create a tuple
 	Tuple = new class'XComLWTuple';
 	Tuple.Id = 'HELIOS_Data_UIUnitFlagConditions';
@@ -203,7 +203,7 @@ simulated function OnInit()
 	`XEVENTMGR.TriggerEvent('HELIOS_TACTICAL_UIUnitFlag_ModifyInitialConditions', Tuple, UnitState);
 
 	bOnlyShowMaxHealth = Tuple.Data[0].b;
-	// End HELIOS Issue #31
+	// End HELIOS Issue #29
 }
 
 // TODO: @dkaplan: make unit flag visualization updates event based
