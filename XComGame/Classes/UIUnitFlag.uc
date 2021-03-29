@@ -99,10 +99,10 @@ var int VisualizedHistoryIndex;
 
 var config bool bDisplaySurprisedPreparedDuringBreach;
 
-// Start HELIOS Issue #15
-// Allow Dark Events to disable updating the HP bar on the UnitFlag
-// Does not stop other UI mods from peeking in Unit stats (Yet Another F1)
-var config 	array<name> DarkEvent_DisableHPUpdatesFromFlag;
+// Start HELIOS Issue #31 (Superseeds #15)
+// Unfortunately we cannot use the previous implementation due to C++/script size mismatch. 
+// We can still do the boolean trick by putting ourselves under a previously defined boolean, but that's about it.
+// Instead, send a LWTuple in an Event Listener when the Flash element is created for the first time.
 
 // Since updating HP is in a hotspot area (Tick function), use a boolean for quicker access
 var bool	bOnlyShowMaxHealth;
@@ -115,10 +115,6 @@ native function bool InGameThread();
 simulated function InitFlag(StateObjectReference ObjectRef)
 {
 	local XComDestructibleActor DestructibleActor;
-
-	// HELIOS Issue #15 variables
-	local name 					IterTag;
-	local HSHelpers				HSHelpersObj;
 
 	m_bIsFriendly = new class'CachedBool';
 	m_bIsActive = new class'CachedBool';
@@ -152,24 +148,6 @@ simulated function InitFlag(StateObjectReference ObjectRef)
 	{
 		Hide();
 	}
-	
-	// Begin HELIOS Issue #15
-	// Check if there's at least one Tactical Tags that require disabling the HP bar
-	
-	// Use CDO to retrieve the object instead of directly referencing the object ( Can't call instance functions from within static functions )
-	HSHelpersObj = HSHelpers(class'XComEngine'.static.GetClassDefaultObject(class'HSHelpers'));
- 	if (HSHelpersObj != none)
-	{
-		foreach DarkEvent_DisableHPUpdatesFromFlag(IterTag)
-		{
-			if ( HSHelpersObj.CheckDarkEventTags(IterTag) )
-			{
-				bOnlyShowMaxHealth = true;
-				return;
-			}
-		}
-	}
-	// End HELIOS Issue #15
 }
 
 // CALLBACK when Flash is initialized and ready to receive values.
@@ -177,6 +155,10 @@ simulated function OnInit()
 {
 	local XComGameState_BaseObject StartingState;
 	local XComGameState_Unit UnitState;
+
+	// HELIOS Issue #15 variables
+	local XComLWTuple				Tuple;
+
 	super.OnInit();
 
 	RootMC = Movie.GetVariableObject(MCPath $ "");
@@ -208,6 +190,20 @@ simulated function OnInit()
 	{
 		UpdateFromState(StartingState, true);
 	}
+
+	// Start HELIOS Issue #31 (Superseeds #15)
+	// Create a tuple
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'HELIOS_Data_UIUnitFlagConditions';
+	Tuple.Data.Add(1);
+	Tuple.Data[0].Kind 	= XComLWTVBool;
+	Tuple.Data[0].b 	= true;			// True to signify that we should continue to update HP
+
+ 	// Send a tuple with the UnitState as the EventSource 
+	`XEVENTMGR.TriggerEvent('HELIOS_TACTICAL_UIUnitFlag_ModifyInitialConditions', Tuple, UnitState);
+
+	bOnlyShowMaxHealth = Tuple.Data[0].b;
+	// End HELIOS Issue #31
 }
 
 // TODO: @dkaplan: make unit flag visualization updates event based
