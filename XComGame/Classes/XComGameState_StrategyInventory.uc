@@ -89,9 +89,9 @@ simulated function XComGameState_Item AddItem(XComGameState ModifyGameState, Sta
 
 	//
 	// Non-weapons: Stack up with any existing item found
-	// Start HELIOS Issue #??
+	// Start HELIOS Issue #33
 	// This code cannot handle custom weapon quantities so the following either happens:
-	// 1) It would end up in a void somewhere and cannot be retrieved again
+	// 1) It would end up in a void somewhere and cannot be retrieved again (Qty doesn't update)
 	// 2) Duplicate the item as a separate enitity (Duplication Glitch found by Grobobobo)
 	//
 	// So we must remove the Primary Weapon check and replace it with a check if it's a linked weapon
@@ -103,6 +103,7 @@ simulated function XComGameState_Item AddItem(XComGameState ModifyGameState, Sta
 		ModifyGameState.RemoveStateObject(Item.ObjectID);
 		`XEVENTMGR.TriggerEvent('InventoryItemQuantityChanged', CurItem, Inventory, ModifyGameState);
 	}
+	// End HELIOS Issue #33
 	// This is a new item or a linked instance of the same item
 	else
 	{
@@ -120,7 +121,6 @@ simulated function XComGameState_Item AddItem(XComGameState ModifyGameState, Sta
 
 		`XEVENTMGR.TriggerEvent('InventoryItemAdded', Item, Inventory, ModifyGameState);
 	}
-	// End HELIOS Issue #??
 
 	return Item;
 }

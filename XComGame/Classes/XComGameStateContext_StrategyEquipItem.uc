@@ -99,7 +99,7 @@ function XComGameState ContextBuildGameState()
 	}
 
 	// Quantity > 1? Split off into new item
-	// Start HELIOS Issue #??
+	// Start HELIOS Issue #33
 	// This code cannot handle custom weapon quantities so the following either happens:
 	// 1) It would end up in a void somewhere and cannot be retrieved again
 	// 2) Duplicate the item as a separate enitity (Duplication Glitch found by Grobobobo)
@@ -114,7 +114,7 @@ function XComGameState ContextBuildGameState()
 		Item = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
 		Item.Quantity = 1;
 	}
-
+	// End HELIOS Issue #33
 	// Re-apply upgrades to weapon (if applicable)
 	if (InventorySlot == eInvSlot_PrimaryWeapon && PrevItemUpgrades.Length > 0)
 	{
