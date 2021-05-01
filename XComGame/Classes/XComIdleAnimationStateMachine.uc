@@ -815,10 +815,6 @@ event bool SetTargetUnit()
 	local int UseHistoryIndex;
 	local XComGameState_BattleData BattleData;	
 	local bool bInBreachSequence;
-	// Variables for Issue WOTC CHL #269
-	local bool AimLocSet;
-	local vector AimAtLocation;
-	local array<vector> TargetLocations;
 
 	History = `XCOMHISTORY;
 	UnitState = UnitNative.GetVisualizedGameState(UseHistoryIndex);
@@ -880,14 +876,6 @@ event bool SetTargetUnit()
 			{
 				TargetLocation = TargetActor.Location;
 			}
-			// Begin Issue WOTC CHL #269
-			else
-			{
-				TargetingMethod.GetTargetLocations(TargetLocations);
-				AimAtLocation = TargetLocations[0];
-				AimLocSet = true;
-			}
-			// End Issue WOTC CHL #269
 			bFoundTarget = true;
 		}
 	}
@@ -895,9 +883,7 @@ event bool SetTargetUnit()
 	{	
 		`log("     Unit is performing a targeting action:", `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
 		ExitCoverAction = Unit.CurrentExitAction;
-
-		// Single line for Issue WOTC CHL #269
-		AimLocSet = true;		
+			
 		bFoundTarget = true;
 		NewTargetActor = ExitCoverAction.PrimaryTarget;
 		if( ExitCoverAction.PrimaryTarget != none )
@@ -906,24 +892,18 @@ event bool SetTargetUnit()
 			{
 				`log("          *ExitCover action has a target, it is ourselves. Do Nothing.", `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
 				bFoundTarget = false;
-				// Begin Issue WOTC CHL #269
-				AimLocSet = false;
 			}
 			else
 			{
 				`log("          *ExitCover action has a target, aiming at"@NewTargetActor, `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
-				// Issue WOTC CHL #269 These two ExitCoverAction properties are the principle reason for introducing AimAtLocation
-				AimAtLocation = ExitCoverAction.AimAtLocation;
-				NewTargetLocation = ExitCoverAction.TargetLocation;
+				NewTargetLocation = ExitCoverAction.AimAtLocation;
 			}
 		}
 		else
 		{
 			`log("          *ExitCover action has no primary target, aiming at"@ExitCoverAction.TargetLocation, `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
-			AimAtLocation = ExitCoverAction.AimAtLocation;
-			NewTargetLocation = ExitCoverAction.TargetLocation;
-			// End Issue WOTC CHL #269
-		}	
+			NewTargetLocation = ExitCoverAction.AimAtLocation;
+		}			
 	}
 	else if (bInBreachSequence && UnitState.GetTeam() == eTeam_XCom)
 	{
@@ -1054,9 +1034,7 @@ event bool SetTargetUnit()
 	}
 //**********************************************************************************************
 
-	// Single line for Issue WOTC CHL #269
-	// HELIOS CHANGE: XComUnitPawnNativeBase::TargetLoc is now privatewrite because SetTargetLoc() (native) now exists.
-	UnitPawn.SetTargetLoc(AimLocSet ? AimAtLocation : TargetLocation);
+	UnitPawn.SetTargetLoc(TargetLocation);
 
 	`log("     SetTargetUnit returning:"@bFoundTarget, `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
 	`log("*** End Processing SetTargetUnit ***", `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
@@ -1185,13 +1163,6 @@ event GetDesiredCoverState(out int CoverIndex, out UnitPeekSide PeekSide)
 	local int VisualizationHistoryIndex;
 	local XComGameState_Unit TargetUnitState;
 	local GameRulesCache_VisibilityInfo OutVisibilityInfo;
-	// New variables, and one removed, for Issue WOTC CHL #269
-	//local GameRulesCache_VisibilityInfo OutVisibilityInfo;
-	local bool bShouldStepOut, bActorFromTargetingMethod;
-	local actor TestActor;
-	local X2TargetingMethod TargetingMethod;
-	local UITacticalHUD TacticalHUD;
-	local vector DummyVector;
 
 	UnitState = UnitNative.GetVisualizedGameState(VisualizationHistoryIndex);
 
@@ -1212,47 +1183,12 @@ event GetDesiredCoverState(out int CoverIndex, out UnitPeekSide PeekSide)
 			{
 				TargetUnitState = TargetUnit.GetVisualizedGameState();
 			}
-		// Start Issue WOTC CHL #269
+			Unit.GetDirectionInfoForTarget(TargetUnitState, OutVisibilityInfo, CoverIndex, PeekSide, bCanSeeFromDefault, bRequiresLean, , VisualizationHistoryIndex);
 		}
-		// Issue WOTC CHL #269 GetSteoOutCoverInfo() calls GetDirectionInfoForTarget()/GetDirectionInfoForPosition() as appropriate
-		// and performs logic as to whether a stepout should occur for X2Action_ExitCover
-		/// HL-Docs: ref:Bugfixes; issue:269
-		/// Fix some edge cases in `XComIdleAnimationStateMachine` regarding idle animations, targeting, and step-outs
-		bShouldStepOut=Unit.GetStepOutCoverInfo(TargetUnitState, TargetLocation, CoverIndex, PeekSide, bRequiresLean, bCanSeeFromDefault);
-		if(CoverIndex==0 && Unit.GetCoverType(0, VisualizationHistoryIndex)==CT_None)
+		else
 		{
-			//There's a bug in native code which means sometimes, CoverIndex 0 instead of -1 for "no cover direction"
-			CoverIndex=-1;
+			Unit.GetDirectionInfoForPosition(TargetLocation, OutVisibilityInfo, CoverIndex, PeekSide, bCanSeeFromDefault, bRequiresLean, , VisualizationHistoryIndex);
 		}
-		// Issue WOTC CHL #269 if we should match the stepout (ie are either targeting or have an active X2Action_ExitCover), and bShouldStepOut,
-		// then no further manipulation of CoverIndex/PeekSide is wanted.
-		// To avoid adding properties to a native class, must repeat some SetTargetUnit() logic.
-		if (bShouldStepOut)
-		{
-			if (Unit.CurrentExitAction!=none && Unit.CurrentExitAction.PrimaryTarget!=Unit)
-			{
-				return;
-			}
-
-			TacticalHUD = `PRES.GetTacticalHUD();
-			if (TacticalHUD != none)
-			{
-				TargetingMethod = TacticalHUD.GetTargetingMethod();
-			}
-	
-			//If targeting is happening, and we are the shooter
-			// Can also happen if the source unit is doing a multi turn ability
-			bActorFromTargetingMethod = TargetingMethod != none && (TargetingMethod.Ability.OwnerStateObject.ObjectID == UnitState.ObjectID);
-			if ( bActorFromTargetingMethod || (UnitState.m_MultiTurnTargetRef.ObjectID > 0) )
-			{
-				TestActor = bActorFromTargetingMethod ? TargetingMethod.GetTargetedActor() : `XCOMHISTORY.GetVisualizer(UnitState.m_MultiTurnTargetRef.ObjectID);
-				if (TestActor != Unit && (TestActor!=none || (bActorFromTargetingMethod && TargetingMethod.GetCurrentTargetFocus(DummyVector))))
-				{
-					return;
-				}
-			}
-		}
-		// End Issue WOTC CHL #269
 
 		CurrentCoverPeekData = UnitNative.GetCachedCoverAndPeekData(VisualizationHistoryIndex);
 
@@ -1294,30 +1230,11 @@ event GetDesiredCoverState(out int CoverIndex, out UnitPeekSide PeekSide)
 					//Pick the cover side that is closest to facing the target
 					ToRight = TransformVectorByRotation(rot(0,16384,0), CurrentCoverPeekData.CoverDirectionInfo[CoverIndex].CoverDirection);
 					TempDot = NoZDot(ToRight, ToTarget);
-					// Begin Issue WOTC CHL #269
-					// If the previous cover direction is not the same, then peekside should be reestablished from scratch, no reliance on  PreviousPeekSide
-					If (PreviousCoverIndex!=CoverIndex)
-					{
-						if(CurrentCoverPeekData.CoverDirectionInfo[CoverIndex].RightPeek.bHasPeekaround > 0)
-						{
-							PreviousPeekSide = ePeekRight;
-						}
-						else if(CurrentCoverPeekData.CoverDirectionInfo[CoverIndex].LeftPeek.bHasPeekaround > 0)
-						{
-							PreviousPeekSide = ePeekLeft;
-						}
-						else
-						{
-							PreviousPeekSide = eNoPeek;
-						}
-					}
-					if(TempDot > 0.0f && (PreviousPeekSide == eNoPeek
-						|| CurrentCoverPeekData.CoverDirectionInfo[CoverIndex].RightPeek.bHasPeekaround > 0))
+					if(TempDot > 0.0f && CurrentCoverPeekData.CoverDirectionInfo[CoverIndex].RightPeek.bHasPeekaround > 0)
 					{
 						PeekSide = ePeekRight;
 					}
-					else if(PreviousPeekSide == eNoPeek || CurrentCoverPeekData.CoverDirectionInfo[CoverIndex].LeftPeek.bHasPeekaround > 0)
-					//End Issue WOTC CHL #269
+					else if(CurrentCoverPeekData.CoverDirectionInfo[CoverIndex].LeftPeek.bHasPeekaround > 0)
 					{
 						PeekSide = ePeekLeft;
 					}
@@ -2225,17 +2142,14 @@ state EvaluateStance
 		else if( DesiredCoverIndex > -1 && !bForceTurnTarget )
 		{
 			//Reverse facings since the animations are named after shoulders against cover and not facing
-			// Begin Issue WOTC CHL #269
-			// There may actually be no peekaround in the requested cover direction/peekside combination
-			if( DesiredPeekSide == ePeekLeft && Unit.GetCoverType(DesiredCoverIndex)!=CT_None)
+			if( DesiredPeekSide == ePeekLeft && CurrentCoverPeekData.CoverDirectionInfo[DesiredCoverIndex].LeftPeek.bHasPeekaround != 0 )
 			{
-				DesiredFaceLocation = Unit.Location + `XWORLD.GetPeekLeftDirection(`IDX_TO_DIR(DesiredCoverIndex) , false) * 1000.0f;
+				DesiredFaceLocation = Unit.Location + (CurrentCoverPeekData.CoverDirectionInfo[DesiredCoverIndex].LeftPeek.PeekaroundDirectionFromCoverPt * 1000.0f);
 			}
-			else if( DesiredPeekSide == ePeekRight && Unit.GetCoverType(DesiredCoverIndex)!=CT_None)
+			else if( DesiredPeekSide == ePeekRight && CurrentCoverPeekData.CoverDirectionInfo[DesiredCoverIndex].RightPeek.bHasPeekaround != 0 )
 			{
-				DesiredFaceLocation = Unit.Location + `XWORLD.GetPeekRightDirection(`IDX_TO_DIR(DesiredCoverIndex) , false) * 1000.0f;
+				DesiredFaceLocation = Unit.Location + (CurrentCoverPeekData.CoverDirectionInfo[DesiredCoverIndex].RightPeek.PeekaroundDirectionFromCoverPt * 1000.0f);
 			}
-			// End Issue WOTC CHL #269
 			else
 			{
 				DesiredFaceLocation = Unit.Location + (Vector(Unit.Rotation) * 1000.0f); // Keep your current facing
@@ -2243,8 +2157,7 @@ state EvaluateStance
 		}
 		else
 		{
-			// Single line for Issue WOTC CHL #269
-			DesiredFaceLocation = bForceTurnTarget ? TempFaceLocation : UnitPawn.TargetLoc;
+			DesiredFaceLocation = bForceTurnTarget ? TempFaceLocation : TargetLocation;
 		}
 
 		return DesiredFaceLocation;
@@ -2355,11 +2268,9 @@ begin:
 		`log("Unit.CanUseCover()                :"@Unit.CanUseCover(), `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
 		if( bForceDesiredCover || bForceTurnTarget )
 		{
-			// Begin Issue WOTC CHL #269
-			`log("Starting TurnTowardsPosition towards UnitPawn.TargetLoc"@UnitPawn.TargetLoc@" Rotator: "@Unit.Rotation@" Vector:"@vector(Unit.Rotation), `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
-			TurnTowardsPosition(bForceTurnTarget ? TempFaceLocation : UnitPawn.TargetLoc);//Latent turning function on XGUnit
-			`log("Finished TurnTowardsPosition towards UnitPawn.TargetLoc"@UnitPawn.TargetLoc@" Rotator: "@Unit.Rotation@" Vector:"@vector(Unit.Rotation), `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
-			// End Issue WOTC CHL #269
+			`log("Starting TurnTowardsPosition towards TargetLocation"@TargetLocation@" Rotator: "@Unit.Rotation@" Vector:"@vector(Unit.Rotation), `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
+			TurnTowardsPosition(bForceTurnTarget ? TempFaceLocation : TargetLocation);//Latent turning function on XGUnit
+			`log("Finished TurnTowardsPosition towards TargetLocation"@TargetLocation@" Rotator: "@Unit.Rotation@" Vector:"@vector(Unit.Rotation), `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
 		}
 	}
 	else
@@ -2497,11 +2408,9 @@ begin:
 			{			
 				if( Unit.m_eCoverState == eCS_None || bForceTurnTarget ) //The unit is not in cover, or is forcing a turn
 				{
-					// Begin Issue WOTC CHL #269
-					`log("Starting TurnTowardsPosition towards UnitPawn.TargetLoc"@(bForceTurnTarget ? TempFaceLocation : UnitPawn.TargetLoc)@" Rotator: "@Unit.Rotation@" Vector:"@vector(Unit.Rotation), `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
-					TurnTowardsPosition(bForceTurnTarget ? TempFaceLocation : UnitPawn.TargetLoc, true);//Latent turning function on XGUnit
-					`log("Finished TurnTowardsPosition towards UnitPawn.TargetLoc"@(bForceTurnTarget ? TempFaceLocation : UnitPawn.TargetLoc)@" Rotator: "@Unit.Rotation@" Vector:"@vector(Unit.Rotation), `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
-					// End Issue WOTC CHL #269
+					`log("Starting TurnTowardsPosition towards TargetLocation"@(bForceTurnTarget ? TempFaceLocation : TargetLocation)@" Rotator: "@Unit.Rotation@" Vector:"@vector(Unit.Rotation), `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
+					TurnTowardsPosition(bForceTurnTarget ? TempFaceLocation : TargetLocation, true);//Latent turning function on XGUnit
+					`log("Finished TurnTowardsPosition towards TargetLocation"@(bForceTurnTarget ? TempFaceLocation : TargetLocation)@" Rotator: "@Unit.Rotation@" Vector:"@vector(Unit.Rotation), `CHEATMGR.MatchesXComAnimUnitName(Unit.Name), 'XCom_Anim');
 				}
 			}
 		}
