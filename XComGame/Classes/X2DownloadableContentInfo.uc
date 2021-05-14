@@ -328,3 +328,14 @@ static function bool OnMissionEndBattle(XGPlayer VictoriousPlayer,
 {
 	return false;
 }
+
+/// <summary>
+/// Begin HELIOS Issue #37 / WOTC CHL ADDITION (Issue #419)
+/// Called from X2AbilityTag.ExpandHandler
+/// Expands vanilla AbilityTagExpandHandler to allow reflection
+/// </summary>
+static function bool AbilityTagExpandHandler_CH(string InString, out string OutString, Object ParseObj, Object StrategyParseOb, XComGameState GameState)
+{
+	return false;
+}
+/// End HELIOS Issue #37
