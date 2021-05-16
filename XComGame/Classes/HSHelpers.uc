@@ -18,6 +18,20 @@ var config array<name> AbilityTemplatePerksToLoad;
 var config array<name> EffectsToExcludeFromTimeline;
 // End HELIOS Issue #10
 
+// MAP AND WORLD-RELATED VARS
+// ------------------------------------------------------------------------------------------------
+
+// BEGIN HELIOS Issue #39
+// Mods that need to add new Markup Maps to existing maps should use this to avoid having to manage config files.
+struct HeliosMarkupMapDefinitionData
+{
+	var string 									MapName;
+	var array<MissionBreachMarkupDefinition> 	arrMarkUpMaps;
+};
+
+var config array<HeliosMarkupMapDefinitionData> AdditionalMarkupMaps;
+// END HELIOS Issue #39
+
 // Start Issue WOTC CHL #123
 simulated static function RebuildPerkContentCache() {
 	local XComContentManager		Content;
@@ -49,3 +63,30 @@ function bool CheckDarkEventTags(name TagName)
 	return false;
 }
 // End HELIOS Issue #16
+
+
+// Begin HELIOS Issue #39
+// General function that searches for a specific tactical tag from the DioHQ state and returns true if exists, false otherwise.
+static function GenerateMarkupMapCompatibility()
+{
+	local HeliosMarkupMapDefinitionData MarkupMapDef;
+	local XComParcelManager				ParcelManager;
+
+	ParcelManager = `PARCELMGR;
+
+	foreach default.AdditionalMarkupMaps(MarkupMapDef)
+	{
+		// Discard any blank map names
+		if (MarkupMapDef.MapName == "")
+			continue;
+
+		// Skip over any empty ObjectiveTags because it will cause alignment issues in the future
+		if (MarkupMapDef.arrMarkUpMaps.Find('ObjectiveTag', "") != INDEX_NONE)
+			continue;
+
+		// This usually gets synced up together
+		ParcelManager.PlotData_AddMarkupMaps(MarkupMapDef.MapName, 	MarkupMapDef.arrMarkUpMaps);
+		ParcelManager.ParcelData_AddMarkupMaps(MarkupMapDef.MapName, 	MarkupMapDef.arrMarkUpMaps);
+	}
+}
+// End HELIOS Issue #39
