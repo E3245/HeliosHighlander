@@ -197,7 +197,7 @@ simulated function OnInit()
 	Tuple.Id = 'HELIOS_Data_UIUnitFlagConditions';
 	Tuple.Data.Add(1);
 	Tuple.Data[0].Kind 	= XComLWTVBool;
-	Tuple.Data[0].b 	= true;			// True to signify that we should continue to update HP
+	Tuple.Data[0].b 	= false;			// False to signify that we should continue to update HP
 
  	// Send a tuple with the UnitState as the EventSource 
 	`XEVENTMGR.TriggerEvent('HELIOS_TACTICAL_UIUnitFlag_ModifyInitialConditions', Tuple, UnitState);
