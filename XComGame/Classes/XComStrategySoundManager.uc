@@ -45,6 +45,10 @@ var private transient int CurrentDistrictCameraNum;
 
 var private transient bool bBiographyScreenOpen;
 
+// Begin HELIOS Issue #43
+// Most of the functions being private or protected makes it very difficult for mods to change the music willingly
+// Un-private most of the functions so that mods can access the API.
+
 //---------------------------------------------------------------------------------------
 function Init()
 {
@@ -461,7 +465,7 @@ private function EventListenerReturn OnInvestigationCompleted(Object EventData, 
 }
 
 //---------------------------------------------------------------------------------------
-private function UpdateInvestigationStrategyMusic()
+function UpdateInvestigationStrategyMusic()
 {
 	local int Index;
 	local int MusicAct;
@@ -666,7 +670,7 @@ static function UpdateInvestigationMusicDataStatic(XComGameState GameState, XCom
 }
 
 //---------------------------------------------------------------------------------------
-static private function int GetNumTacticalMusicGroups(X2DioInvestigationTemplate InvestigationTemplate, EInvestigationStage InvestigationStage)
+static function int GetNumTacticalMusicGroups(X2DioInvestigationTemplate InvestigationTemplate, EInvestigationStage InvestigationStage)
 {
 	if (InvestigationStage == eStage_Takedown && InvestigationTemplate.TakedownMusic.EncounterPlaylists.Length > 0)
 	{
@@ -676,7 +680,7 @@ static private function int GetNumTacticalMusicGroups(X2DioInvestigationTemplate
 }
 
 //---------------------------------------------------------------------------------------
-static private function bool InvestigationHasMusicPlaylistSets(X2DioInvestigationTemplate InvestigationTemplate, EInvestigationStage InvestigationStage)
+static function bool InvestigationHasMusicPlaylistSets(X2DioInvestigationTemplate InvestigationTemplate, EInvestigationStage InvestigationStage)
 {
 	if (InvestigationStage == eStage_Takedown)
 	{
@@ -689,14 +693,14 @@ static private function bool InvestigationHasMusicPlaylistSets(X2DioInvestigatio
 }
 
 //---------------------------------------------------------------------------------------
-static private function bool InvestigationNeedsCommonPlaylist(X2DioInvestigationTemplate InvestigationTemplate, XComGameState_Investigation Investigation)
+static function bool InvestigationNeedsCommonPlaylist(X2DioInvestigationTemplate InvestigationTemplate, XComGameState_Investigation Investigation)
 {
 	return Investigation == none || Investigation.Stage != eStage_Takedown || InvestigationTemplate == none || InvestigationTemplate.TakedownMusic.bIncludeCommonPlaylist;
 }
 
 
 //---------------------------------------------------------------------------------------
-static private function XComGameState_TacticalMusicGroup CreateMusicGroup(
+static public function XComGameState_TacticalMusicGroup CreateMusicGroup(
 	X2DioInvestigationTemplate InvestigationTemplate,
 	XComGameState GameState,
 	XComGameState_TacticalMusicPlaylist TacticalMusic,
@@ -726,7 +730,7 @@ static private function XComGameState_TacticalMusicGroup CreateMusicGroup(
 }
 
 //---------------------------------------------------------------------------------------
-static private function XComGameState_TacticalMusicGroup ModifyMusicGroup(
+static public function XComGameState_TacticalMusicGroup ModifyMusicGroup(
 	X2DioInvestigationTemplate InvestigationTemplate,
 	XComGameState GameState,
 	int TacticalMusicGroupID,
@@ -760,7 +764,7 @@ static private function XComGameState_TacticalMusicGroup ModifyMusicGroup(
 }
 
 //---------------------------------------------------------------------------------------
-static private function RemoveMusicGroup(
+static public function RemoveMusicGroup(
 	XComGameStateHistory History,
 	XComGameState GameState,
 	XComGameState_TacticalMusicPlaylist TacticalMusic,
@@ -850,6 +854,8 @@ function bool IsBiographyScreenOpen()
 {
 	return bBiographyScreenOpen;
 }
+
+// End HELIOS Issue #43
 
 //---------------------------------------------------------------------------------------
 DefaultProperties
