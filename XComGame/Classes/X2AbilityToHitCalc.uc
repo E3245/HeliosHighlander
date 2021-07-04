@@ -12,7 +12,7 @@ class X2AbilityToHitCalc extends Object
 
 var() array<ShotModifierInfo> HitModifiers;       // Configured in the ability template to provide always-on modifiers.
 
-// Start Issue #555
+// Begin HELIOS Issue #45 (WOTC CHL #555)
 //
 // Mods can add their own matching functions to this array within
 // OnPostTemplatesCreated() in order to modify or override the default
@@ -24,7 +24,7 @@ var() array<ShotModifierInfo> HitModifiers;       // Configured in the ability t
 var array< delegate<OverrideFinalHitChance> > OverrideFinalHitChanceFns;
 
 delegate bool OverrideFinalHitChance(X2AbilityToHitCalc AbilityToHitCalc, out ShotBreakdown ShotBreakdown);
-// End Issue #555
+// End HELIOS Issue #45 (WOTC CHL #555)
 
 function RollForAbilityHit(XComGameState_Ability kAbility, AvailableTarget kTarget, out AbilityResultContext ResultContext);
 protected function int GetHitChance(XComGameState_Ability kAbility, AvailableTarget kTarget, optional out ShotBreakdown m_ShotBreakdown, optional bool bDebugLog=false);
@@ -79,12 +79,12 @@ protected function FinalizeHitChance(out ShotBreakdown m_ShotBreakdown, bool bDe
 	local int LuckyGraze;
 	local int MissToLuckyGraze;
 
-    // Vars for Issue #555
+    // Vars for HELIOS Issue #45 (WOTC CHL #555)
 	local bool OverrideHitChanceCalc;
 	local delegate<OverrideFinalHitChance> OverrideFn;
-	// End Issue #555
+	// End HELIOS Issue #45 (WOTC CHL #555)
 
-    // Start Issue #555
+    // Begin HELIOS Issue #45 (WOTC CHL #555)
     OverrideHitChanceCalc = false;
 	foreach OverrideFinalHitChanceFns(OverrideFn)
 	{
@@ -97,7 +97,7 @@ protected function FinalizeHitChance(out ShotBreakdown m_ShotBreakdown, bool bDe
 	{
 		return;
 	}
-    // End Issue #555
+	// End HELIOS Issue #45 (WOTC CHL #555)
 
 	`log("==" $ GetFuncName() $ "==\n", bDebugLog, 'XCom_HitRolls');
 	`log("Starting values...", bDebugLog, 'XCom_HitRolls');
