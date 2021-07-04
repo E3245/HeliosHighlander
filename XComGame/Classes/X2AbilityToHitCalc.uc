@@ -23,6 +23,8 @@ var() array<ShotModifierInfo> HitModifiers;       // Configured in the ability t
 // default logic, or false if the logic should execute.
 var array< delegate<OverrideFinalHitChance> > OverrideFinalHitChanceFns;
 
+delegate bool OverrideFinalHitChance(X2AbilityToHitCalc AbilityToHitCalc, out ShotBreakdown ShotBreakdown);
+// End Issue #555
 
 function RollForAbilityHit(XComGameState_Ability kAbility, AvailableTarget kTarget, out AbilityResultContext ResultContext);
 protected function int GetHitChance(XComGameState_Ability kAbility, AvailableTarget kTarget, optional out ShotBreakdown m_ShotBreakdown, optional bool bDebugLog=false);
