@@ -173,3 +173,139 @@ simulated function Effect_TriggerCheckCoverMitigationChanges(XComGameState_Unit 
 	}
 }
 // End HELIOS Issue #50
+
+// Begin HELIOS Issue #52
+// Gathers all of the breach templates necessary
+static simulated function array<HSTacticalVisualizationTemplate> GatherPreBreachBeginVisualizationTemplates()
+{
+	local X2TacticalElementTemplateManager			TactManager;
+	local X2DataTemplate 							Template;
+	local array<HSTacticalVisualizationTemplate>	CachedVisTemplates;	
+	local HSTacticalVisualizationTemplate			HSVisTemplate;
+
+	// Grab every HSTacticalVisualizerElementTemplate and iterate through them, then start visualizing after the BeginBreachModeMarker
+	TactManager = class'X2TacticalElementTemplateManager'.static.GetTacticalElementTemplateManager();
+	
+	foreach TactManager.IterateTemplates(Template, none)
+	{
+		HSVisTemplate = HSTacticalVisualizationTemplate(Template);
+		if (HSVisTemplate == none)
+			continue;
+
+		// A valid Visualization Template, cache the template
+		if (HSVisTemplate.PreBuildVisualizationBeginBreach != none)
+		{
+			CachedVisTemplates.AddItem(HSVisTemplate);
+		}
+		
+		//Reorder templates based on priority
+		CachedVisTemplates.Sort(static.SortVisualizationTemplatesByPriority);
+	}
+
+	return CachedVisTemplates;
+}
+
+static simulated function array<HSTacticalVisualizationTemplate> GatherPostBeginBreachVisualizationTemplates()
+{
+	local X2TacticalElementTemplateManager			TactManager;
+	local X2DataTemplate 							Template;
+	local array<HSTacticalVisualizationTemplate>	CachedVisTemplates;	
+	local HSTacticalVisualizationTemplate			HSVisTemplate;
+
+	// Grab every HSTacticalVisualizerElementTemplate and iterate through them, then start visualizing after the BeginBreachModeMarker
+	TactManager = class'X2TacticalElementTemplateManager'.static.GetTacticalElementTemplateManager();
+	
+	foreach TactManager.IterateTemplates(Template, none)
+	{
+		HSVisTemplate = HSTacticalVisualizationTemplate(Template);
+		if (HSVisTemplate == none)
+			continue;
+
+		// A valid Visualization Template, cache the template
+		if (HSVisTemplate.PostBuildVisualizationBeginBreach != none)
+		{
+			CachedVisTemplates.AddItem(HSVisTemplate);
+		}
+		
+		//Reorder templates based on priority
+		CachedVisTemplates.Sort(static.SortVisualizationTemplatesByPriority);
+	}
+
+	return CachedVisTemplates;
+}
+
+static simulated function array<HSTacticalVisualizationTemplate> GatherRoomClearedVisualizationTemplates()
+{
+	local X2TacticalElementTemplateManager			TactManager;
+	local X2DataTemplate 							Template;
+	local array<HSTacticalVisualizationTemplate>	CachedVisTemplates;	
+	local HSTacticalVisualizationTemplate			HSVisTemplate;
+
+	// Grab every HSTacticalVisualizerElementTemplate and iterate through them, then start visualizing after the BeginBreachModeMarker
+	TactManager = class'X2TacticalElementTemplateManager'.static.GetTacticalElementTemplateManager();
+	
+	foreach TactManager.IterateTemplates(Template, none)
+	{
+		HSVisTemplate = HSTacticalVisualizationTemplate(Template);
+		if (HSVisTemplate == none)
+			continue;
+
+		// A valid Visualization Template, cache the template
+		if (HSVisTemplate.BuildVisualizationRoomCleared != none)
+		{
+			CachedVisTemplates.AddItem(HSVisTemplate);
+		}
+		
+		//Reorder templates based on priority
+		CachedVisTemplates.Sort(static.SortVisualizationTemplatesByPriority);
+	}
+
+	return CachedVisTemplates;
+}
+
+static simulated function array<HSTacticalVisualizationTemplate> GatherEndBreachVisualizationTemplates()
+{
+	local X2TacticalElementTemplateManager			TactManager;
+	local X2DataTemplate 							Template;
+	local array<HSTacticalVisualizationTemplate>	CachedVisTemplates;	
+	local HSTacticalVisualizationTemplate			HSVisTemplate;
+
+	// Grab every HSTacticalVisualizerElementTemplate and iterate through them, then start visualizing after the BeginBreachModeMarker
+	TactManager = class'X2TacticalElementTemplateManager'.static.GetTacticalElementTemplateManager();
+	
+	foreach TactManager.IterateTemplates(Template, none)
+	{
+		HSVisTemplate = HSTacticalVisualizationTemplate(Template);
+		if (HSVisTemplate == none)
+			continue;
+
+		// A valid Visualization Template, cache the template
+		if (HSVisTemplate.BuildVisualizationBreachEnd != none)
+		{
+			CachedVisTemplates.AddItem(HSVisTemplate);
+		}
+		
+		//Reorder templates based on priority
+		CachedVisTemplates.Sort(static.SortVisualizationTemplatesByPriority);
+	}
+
+	return CachedVisTemplates;
+}
+
+// Sort the tactical templates based on priority. 
+// Same as Event Listeners, higher priority goes first, lowest priority goes last
+function int SortVisualizationTemplatesByPriority(HSTacticalVisualizationTemplate TemplateA, HSTacticalVisualizationTemplate TemplateB)
+{
+	local int TierA, TierB;
+
+	TierA = TemplateA.Priority;
+	TierB = TemplateB.Priority;
+
+	if (TierA > TierB)
+		return -1; // Earlier
+	else if (TierA < TierB) 
+		return 1;	// Later
+	else 
+		return 0;	// No change
+}
+// End HELIOS Issue #52
