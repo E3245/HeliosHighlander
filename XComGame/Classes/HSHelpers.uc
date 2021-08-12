@@ -45,6 +45,15 @@ struct CoverMitigationChanges
 var privatewrite array<CoverMitigationChanges>	arrModifyCoverMitigationCalculations;
 // End HELIOS Issue #50
 
+// BREACH VARS
+// ------------------------------------------------------------------------------------------------
+
+// Begin HELIOS Issue #51
+// Allow mods to insert custom Dark Event modifiers based on current tactical tags.
+// Right now, High Response is the only dark event set up for this.
+var config array<ConditionalBreachModifier> ModifiersAdditionalByDarkEvent;
+// End HELIOS Issue #51
+
 // MAP AND WORLD-RELATED VARS
 // ------------------------------------------------------------------------------------------------
 
