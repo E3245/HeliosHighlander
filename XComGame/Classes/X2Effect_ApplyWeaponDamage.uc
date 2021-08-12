@@ -1550,44 +1550,8 @@ static function GameRulesCache_VisibilityInfo CalculateCoverMitigationForAbility
 	local X2AbilityToHitCalc_StandardAim StandardAimHitCalc;
 	local GameRulesCache_VisibilityInfo VisInfo;
 
-	// HELIOS Issue #27
-	local XComLWTuple					Tuple;
-	local int							AddedCoverMitigation;
-	local bool							bPerformCoverMitigation;	// For clarity
-
-	// Begin HELIOS Issue #27
-	//
-	// Allow mods to conditionally add to or disable Cover Mitigation
-	// Use a tuple to send the AbilityTemplate object across the Event Listener
-	//
-	// The tuple contains the following data:
-	// [0]: bPerformCoverMitigation that dictates if the cover mitigation calculations should go through, or simply exit with the VisInfo with no further calculations
-	// [1]: XComGameState_Unit SourceUnit		( Not intended for modification )
-	// [2]: XComGameState_Unit TargetUnit		( Not intended for modification )
-	// [3]: X2AbilityTemplate AbilityTemplate	( Not intended for modification )
-	// [4]: Integer that adds to this function's CoverMitigation value
-	//
-
-	bPerformCoverMitigation = true;
-
-	Tuple = new class'XComLWTuple';
-	Tuple.Id = 'HELIOS_Data_CoverMitigation';
-	Tuple.Data.Add(5);
-	Tuple.Data[0].kind 	= XComLWTVBool;
-	Tuple.Data[0].b 	= bPerformCoverMitigation;
-	Tuple.Data[1].kind 	= XComLWTVObject;
-	Tuple.Data[1].o 	= SourceUnit;
-	Tuple.Data[2].kind 	= XComLWTVObject;
-	Tuple.Data[2].o 	= TargetUnit;
-	Tuple.Data[3].kind 	= XComLWTVObject;
-	Tuple.Data[3].o 	= AbilityTemplate;
-	Tuple.Data[4].kind 	= XComLWTVInt;
-	Tuple.Data[4].i 	= AddedCoverMitigation;
-
-	`XEVENTMGR.TriggerEvent('HELIOS_TACTICAL_ModifyCoverMitigationCalculations', Tuple, Tuple);
-
-	bPerformCoverMitigation = Tuple.Data[0].b;
-	// End HELIOS Issue #27
+	// HELIOS Issue #50 Vars
+	local HSHelpers					HSHelpersObj;
 
 	if (SourceUnit != none
 		&& TargetUnit != none
@@ -1607,13 +1571,6 @@ static function GameRulesCache_VisibilityInfo CalculateCoverMitigationForAbility
 				// if any cover is being taken, factor in the angle to attack
 				if (VisInfo.TargetCover != CT_None && !TargetUnit.IsFlanked(SourceUnitRef))
 				{
-					
-					// Begin HELIOS Issue #27
-					// After retrieving the VisInfo, determine if we need to exit the function
-					if (!bPerformCoverMitigation)
-						return VisInfo;
-					// End HELIOS Issue #27
-
 					switch (VisInfo.TargetCover)
 					{
 					case CT_MidLevel:           //  half cover
@@ -1628,10 +1585,20 @@ static function GameRulesCache_VisibilityInfo CalculateCoverMitigationForAbility
 		}
 	}
 
-	// Begin HELIOS Issue #27
-	// Add to cover mitigation, if any
-	CoverMitigation		+= Tuple.Data[4].i;
-	// End HELIOS Issue #27
+	// Begin HELIOS Issue #50 
+	// [Superseeds HELIOS Issue #27]
+	//
+	// Mods will need to insert delegates into the ClassDefaultObject of the HSHelpers object if they want to modify cover mitigation.
+	// Previously (#27) was done via event listener, but after performing severals tests, we can safely conclude that the cover mitigation value is not modified due to race conditions.
+	// Best we can do here is to execute delegates that allow for thread-safe modification, although a bit slower.
+	// 
+	// Beware that there might be some performance impacts since there's several hotspots that call this function (UIUnitFlagManager, UITacticalTimeline) per tick.
+	//
+
+	HSHelpersObj = class'HSHelpers'.static.GetCDO();
+	HSHelpersObj.Effect_TriggerCheckCoverMitigationChanges(SourceUnit, TargetUnit, AbilityTemplate, VisInfo, CoverMitigation);
+
+	// End HELIOS Issue #50
 
 	return VisInfo;
 }

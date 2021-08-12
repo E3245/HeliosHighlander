@@ -4,6 +4,17 @@
 //
 class HSHelpers extends Object config(Game);
 
+// GLOBAL DATA STRUCTURES AND VARS
+// ------------------------------------------------------------------------------------------------
+
+// Interruption returns that allow mods to stop subsequent processing of delegates if set
+// Initially created for CoverMitigationCalculationCallbackFn but will be used for other delegates and templates from now on
+enum EHLDInterruptReturn
+{
+	EHLD_NoInterrupt,	// Continue processing subsequent delegates
+	EHLD_Interrupt,		// Stop processing subsequent delegates
+};
+
 // Start Issue WOTC CHL #123
 // List of AbilityTemplateNames that have associated XComPerkContent
 var config array<name> AbilityTemplatePerksToLoad;
@@ -18,6 +29,22 @@ var config array<name> AbilityTemplatePerksToLoad;
 var config array<name> EffectsToExcludeFromTimeline;
 // End HELIOS Issue #10
 
+// Begin HELIOS Issue #50
+// Add a method of changing the Cover Mitigation value via Delegates
+struct CoverMitigationChanges
+{
+	var delegate<CoverMitigationCalculationCallbackFn> CoverMitigationFn;
+	var int Priority;
+
+	structdefaultproperties
+	{
+		Priority = 50;
+	}
+};
+
+var privatewrite array<CoverMitigationChanges>	arrModifyCoverMitigationCalculations;
+// End HELIOS Issue #50
+
 // MAP AND WORLD-RELATED VARS
 // ------------------------------------------------------------------------------------------------
 
@@ -31,6 +58,11 @@ struct HeliosMarkupMapDefinitionData
 
 var config array<HeliosMarkupMapDefinitionData> AdditionalMarkupMaps;
 // END HELIOS Issue #39
+
+// Any new delegates should be initialized here
+// Begin HELIOS Issue #50
+delegate EHLDInterruptReturn CoverMitigationCalculationCallbackFn(XComGameState_Unit SourceUnit, XComGameState_Unit TargetUnit, X2AbilityTemplate AbilityTemplate, GameRulesCache_VisibilityInfo PickedVisInfo, out int CoverMitigation);
+// End HELIOS Issue #50
 
 // Start Issue WOTC CHL #123
 simulated static function RebuildPerkContentCache() {
@@ -64,7 +96,6 @@ function bool CheckDarkEventTags(name TagName)
 }
 // End HELIOS Issue #16
 
-
 // Begin HELIOS Issue #39
 // General function that searches for a specific tactical tag from the DioHQ state and returns true if exists, false otherwise.
 static function GenerateMarkupMapCompatibility()
@@ -90,3 +121,46 @@ static function GenerateMarkupMapCompatibility()
 	}
 }
 // End HELIOS Issue #39
+
+// Begin HELIOS Issue #50
+// Introduced with this issue.
+// Helper function to get this class default object
+// Use with caution!
+static function HSHelpers GetCDO()
+{
+	// This is hot code, so use an optimized function here
+	return HSHelpers(FindObject("XComGame.Default__HSHelpers", class'HSHelpers'));
+}
+
+// If a mod wants to modify the cover mitigation post-calculation, then add the delegate here
+// Delegates must exist in a default object *that's accessible in Tactical*, the best place would be in any X2DownloadableContentInfo extended class
+// Even though the struct supports priority, we probably aren't going to use it a lot, yet.
+simulated function Effect_AddCoverMitigationChange(delegate<CoverMitigationCalculationCallbackFn> NewCoverMitigationFn)
+{
+	local CoverMitigationChanges CoverChanges;
+	local int i;
+
+	// No blank delegates!
+	if (NewCoverMitigationFn == none)
+		return;
+
+	CoverChanges.CoverMitigationFn 	= NewCoverMitigationFn;
+
+	arrModifyCoverMitigationCalculations.AddItem(CoverChanges);
+}
+
+simulated function Effect_TriggerCheckCoverMitigationChanges(XComGameState_Unit SourceUnit, XComGameState_Unit TargetUnit, X2AbilityTemplate AbilityTemplate, GameRulesCache_VisibilityInfo PickedVisInfo, out int CoverMitigation)
+{
+	local CoverMitigationChanges CoverChanges;
+	local delegate<CoverMitigationCalculationCallbackFn> CurrentCoverMitigationFn;
+
+	foreach arrModifyCoverMitigationCalculations(CoverChanges)
+	{
+		CurrentCoverMitigationFn = CoverChanges.CoverMitigationFn;
+		
+		// Stop processing events if a delegate returns EHLD_Interrupt
+		if ( CurrentCoverMitigationFn(SourceUnit, TargetUnit, AbilityTemplate, PickedVisInfo, CoverMitigation) == EHLD_Interrupt )
+			break;
+	}
+}
+// End HELIOS Issue #50
