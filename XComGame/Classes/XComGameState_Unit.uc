@@ -14490,12 +14490,34 @@ simulated function ProgressScars(XComGameState ModifyGameState, EScarSourceFlags
 	local array<StateObjectReference> DeepenScarOptions;
 	local int i, RandIdx;
 
+	// HELIOS Issue #59 Variables
+	local XComLWTuple	Tuple;
+
+	// Begin HELIOS Issue #59
+	// Allow mods to define their own logic for Scars. The function will check if Data[0].o has already created a scar.
+	// Event Listener must be set to ELD_Immediate for this to work
+	// Send a boolean so we can determine if we go forward with Alt Market Processing
+	Tuple = new class'XComLWTuple';
+	Tuple.Id = 'HELIOS_Payload_ProgressScar';
+	Tuple.Data.Add(2);
+	Tuple.Data[0].kind 	= XComLWTVObject;
+	Tuple.Data[0].o 	= none;
+	Tuple.Data[1].kind 	= XComLWTVInt;
+	Tuple.Data[1].i 	= Source;
+
+	// Send the Tuple and the Gamestate through this event
+	`XEVENTMGR.TriggerEvent('HELIOS_STRATEGY_Unit_ProgressScar', Tuple, self, ModifyGameState);
+
+	Scar = XComGameState_UnitScar(Tuple.Data[0].o);
+
 	// If time to earn a new scar, pivot here
-	if (class'DioStrategyAI'.static.ShouldUnitEarnNewScar(self))
+	if (Scar == none && class'DioStrategyAI'.static.ShouldUnitEarnNewScar(self))
 	{
 		Scar = BuildNewScar(ModifyGameState);
 	}
-	else
+	// Change this to prevent Scars that are already created from getting erased and created again
+	else if (Scar == none)
+	// End HELIOS Issue #59
 	{
 		// Else pick one of our existing scars and deepen it
 		for (i = 0; i < Scars.Length; ++i)
