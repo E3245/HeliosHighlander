@@ -111,6 +111,8 @@ enum EStrategyNotificationType
 	eSNT_AgentDiedOnMission,	
 	eSNT_Icarus_NewArtifactAdded,	
 	eSNT_Icarus_ScarsRemoved,	
+	// Single Line for HELIOS Issue #??
+	eSNT_Icarus_ActAdvancement,	
 	// HELIOS END	
 };
 
