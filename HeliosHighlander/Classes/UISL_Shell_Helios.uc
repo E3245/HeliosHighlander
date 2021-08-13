@@ -3,6 +3,7 @@
 class UISL_Shell_Helios extends UIScreenListener config(Game);
 
 var config bool bEnableVersionDisplay;
+var config bool bAnchorOnBottom;
 
 event OnInit(UIScreen Screen)
 {
@@ -40,11 +41,21 @@ function RealizeVersionText(UIShell ShellScreen)
 	{
 		VersionDisplay = ShellScreen.Spawn(class'UIText', ShellScreen);
 		VersionDisplay.InitText('theVersionText');
-		// This code aligns the version text to the Main Menu Ticker
-		VersionDisplay.AnchorBottomCenter();
-		VersionDisplay.SetY(-ShellScreen.TickerHeight + 10);
 
-		VersionString = "Highlander loaded, Codename Helios, Version: " $ class'X2DownloadableContentInfo_Helios_Overhaul'.default.Version;
+		// Bottom Display
+		if (bAnchorOnBottom)
+		{
+			VersionDisplay.AnchorBottomLeft().SetY(-ShellScreen.TickerHeight + 10);
+		}
+		// Top Display
+		else
+		{
+			VersionDisplay.AnchorTopLeft();
+		}
+		
+		VersionDisplay.SetWidth(ShellScreen.Movie.m_v2ScaledFullscreenDimension.X);
+
+		VersionString = class'UIUtilities_Text'.static.AlignCenter("Codename Helios loaded, Version: " $ class'X2DownloadableContentInfo_Helios_Overhaul'.default.Version $ "[" $ class'X2DownloadableContentInfo_Helios_Overhaul'.default.Build $ "]");
 		VersionDisplay.SetHTMLText(VersionString);
 	
 		`LOG("Version Text Created: " $ VersionString $", Object: " $ VersionDisplay,,'Helios_Overhaul');		

@@ -9,20 +9,19 @@
 class X2DownloadableContentInfo_Helios_Overhaul extends X2DownloadableContentInfo config (Game);
 
 var config string Version;
+var config string Build;
 
 /// <summary>
 /// Called after the Templates have been created (but before they are validated) while this DLC / Mod is installed.
 /// </summary>
 static event OnPostTemplatesCreated()
 {
-	`log("Loaded Highlander, codename HELIOS. Version: " $ default.Version, true , 'Helios_Overhaul');
+	`log("Loaded Highlander, codename HELIOS. Version: " $ default.Version $ ", Build: " $ default.Build, true , 'Helios_Overhaul');
 	
 	// Guard against crashing
 	if (class'HSHelpers' != none)
 	{
 		class'HSHelpers'.static.RebuildPerkContentCache();
-
-		`log("Additional Markup Maps: " $ class'HSHelpers'.default.AdditionalMarkupMaps.Length, true , 'Helios_Overhaul');
 
 		// Begin HELIOS Issue #39
 		class'HSHelpers'.static.GenerateMarkupMapCompatibility();
