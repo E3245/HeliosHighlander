@@ -788,7 +788,7 @@ simulated function RemoveTweens()
 simulated function AnimateIn(optional float Delay = -1.0)
 {
 	if( Delay == -1.0 && ParentPanel != none)
-		Delay = ParentPanel.GetChildIndex(self) * class'UIUtilities'.const.INTRO_ANIMATION_DELAY_PER_INDEX; 
+		Delay = ParentPanel.GetDirectChildIndex(self) * class'UIUtilities'.const.INTRO_ANIMATION_DELAY_PER_INDEX; // HELIOS Issue #83 (WotC CHL Issue #341)
 
 	AddTweenBetween("_alpha", 0, Alpha, class'UIUtilities'.const.INTRO_ANIMATION_TIME, Delay);
 }
@@ -796,7 +796,7 @@ simulated function AnimateIn(optional float Delay = -1.0)
 simulated function AnimateOut(optional float Delay = -1.0)
 {
 	if( Delay == -1.0 && ParentPanel != none )
-		Delay = ParentPanel.GetChildIndex(self) * class'UIUtilities'.const.INTRO_ANIMATION_DELAY_PER_INDEX; 
+		Delay = ParentPanel.GetDirectChildIndex(self) * class'UIUtilities'.const.INTRO_ANIMATION_DELAY_PER_INDEX; // HELIOS Issue #83 (WotC CHL Issue #341)
 
 	AddTweenBetween("_alpha", Alpha, 0, class'UIUtilities'.const.INTRO_ANIMATION_TIME, Delay);
 }
@@ -932,6 +932,31 @@ simulated function int GetChildIndex(UIPanel Child, optional bool ErrorIfNotFoun
 	}
 	return -1;
 }
+
+// Start HELIOS Issue #83 (WotC CHL Issue #341): Function to be used when actually getting the "direct" child index.
+// UIScreens get all their recursive child panels added, so GetChildIndex is unusable for AnimateIn
+simulated function int GetDirectChildIndex(UIPanel Child, optional bool ErrorIfNotFound = true)
+{
+	local int i, index;
+
+	for(i = 0; i < ChildPanels.Length; ++i)
+	{
+		if( ChildPanels[i] == Child )
+			return index; 
+
+		if (ChildPanels[i].ParentPanel == self)
+			index++;
+	}
+
+	// Don't print errors when recursing through children.
+	if( ErrorIfNotFound )
+	{
+		ScriptTrace();
+		`warn("UI ERROR: could not find Index of the child control '" $ Child.MCName $ "' in '" $ self.MCName $ "'.");
+	}
+	return -1;
+}
+// End HELIOS Issue #83 (WotC CHL Issue #341)
 
 // TODO: Nativize
 simulated function GetChildrenOfType(class ClassType, out array<UIPanel> ChildrenOfType)
